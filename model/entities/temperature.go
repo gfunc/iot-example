@@ -1,6 +1,9 @@
 package entities
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 type TemperatureEvent struct {
 	Event
@@ -12,6 +15,9 @@ func (e *TemperatureEvent) ParseBinary(b []byte) (err error) {
 		return err
 	}
 	sub := tempRegex.FindStringSubmatch(string(b))
+	if len(sub)<2{
+		return fmt.Errorf("wrong format")
+	}
 	tempStr := sub[1]
 	e.Temperature, err = strconv.ParseFloat(tempStr, 64)
 	return

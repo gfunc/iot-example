@@ -1,6 +1,7 @@
 package inspectors
 
 import (
+	"fmt"
 	ip "iot_practise"
 	"iot_practise/model/entities"
 	"sync"
@@ -9,7 +10,7 @@ import (
 
 type TemperatureInspector struct {
 	sync.Mutex
-	cache map[string]tempStat
+	cache map[string]*tempStat
 }
 
 type tempStat struct {
@@ -22,7 +23,7 @@ func (ti *TemperatureInspector) Inspect(entity ip.EventEntity, errChan chan<- er
 	ti.Lock()
 	defer ti.Unlock()
 	if ti.cache == nil {
-		ti.cache = make(map[string]tempStat, 0)
+		ti.cache = make(map[string]*tempStat, 0)
 	}
 
 	tp, ok := entity.(*entities.TemperatureEvent)
@@ -30,7 +31,7 @@ func (ti *TemperatureInspector) Inspect(entity ip.EventEntity, errChan chan<- er
 	if ok {
 		tc, exist := ti.cache[entity.GetDeviceID()]
 		if !exist {
-			ti.cache[entity.GetDeviceID()] = tempStat{
+			ti.cache[entity.GetDeviceID()] = &tempStat{
 				date: tp.EventTime.Truncate(time.Hour * 24),
 				max:  *tp,
 				min:  *tp,
@@ -55,11 +56,13 @@ func (ti *TemperatureInspector) Inspect(entity ip.EventEntity, errChan chan<- er
 				}
 			}
 			if msg != "" {
-				errChan <- &ip.EventAlert{
+				errChan <- ip.EventAlert{
 					Event: entity,
 					Msg:   msg,
 				}
 			}
 		}
+	} else {
+		errChan <- fmt.Errorf("wrong entity type in TemperatureInspector!")
 	}
 }

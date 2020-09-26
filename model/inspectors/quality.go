@@ -35,7 +35,7 @@ func (qi *QualityInspector) Inspect(entity ip.EventEntity, errChan chan<- error)
 			for k, v := range tp.Indexes {
 				if wk, ok := qe.warn[k]; ok {
 					if v >= wk*1.1 {
-						errChan <- &ip.EventAlert{
+						errChan <- ip.EventAlert{
 							Event: entity,
 							Msg:   fmt.Sprintf("%s过高", k),
 						}
@@ -50,5 +50,7 @@ func (qi *QualityInspector) Inspect(entity ip.EventEntity, errChan chan<- error)
 				qe.last[k] = v
 			}
 		}
+	} else {
+		errChan <- fmt.Errorf("wrong entity type in QualityInspector!")
 	}
 }

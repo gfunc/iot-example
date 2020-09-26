@@ -6,16 +6,26 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"reflect"
+	"time"
 )
 
-type Worker func(context.Context, chan<- error)
+const persistDir = "log"
+
+type Worker func(context.Context, int, chan<- error)
 
 type EventMonitor struct {
-	Name       string
-	Entity     EventEntity
-	EntityChan chan EventEntity
-	Inspectors []EventInspector
+	Name         string
+	Entity       EventEntity
+	entityChan   chan EventEntity
+	Inspectors   []EventInspector
+	WorkerCreate chan int
+}
+
+func (em *EventMonitor) CreateChan(size int) {
+	em.entityChan = make(chan EventEntity, size)
+	em.WorkerCreate = make(chan int, 1)
 }
 
 func (em *EventMonitor) GetHandler() http.HandlerFunc {
@@ -37,8 +47,8 @@ func (em *EventMonitor) GetHandler() http.HandlerFunc {
 			fmt.Fprintf(w, err.Error())
 			return
 		}
-		em.EntityChan <- e
-		fmt.Fprintf(w,"ok")
+		em.entityChan <- e
+		fmt.Fprintf(w, em.Name+" ok")
 	}
 }
 
@@ -47,23 +57,39 @@ func (em *EventMonitor) GetWorker(prefix string) Worker {
 	if etp.Kind() == reflect.Ptr {
 		etp = etp.Elem()
 	}
-	return func(ctx context.Context, errChan chan<- error) {
-		f, err := ioutil.TempFile(".", prefix+"_"+etp.Name())
+
+	if _, err := os.Stat(persistDir); os.IsNotExist(err) {
+		os.Mkdir(persistDir, os.ModeDir)
+	}
+	return func(ctx context.Context, index int, errChan chan<- error) {
+		pattern := fmt.Sprintf("%s_%d_%s", prefix, index, etp.Name())
+		f, err := ioutil.TempFile(persistDir, pattern)
 		if err != nil {
 			errChan <- err
 			return
 		}
+
+		timer := time.NewTimer(5*time.Hour + time.Duration(index)*time.Minute)
+
 		defer f.Sync()
 		defer f.Close()
-		select {
-		case <-ctx.Done():
-			return
+		defer timer.Stop()
+		for e := range em.entityChan {
+			select {
+			case <-ctx.Done():
+				em.entityChan <- e
+				return
+			case <-timer.C:
+				em.WorkerCreate <- index
+				em.entityChan <- e
+				return
+			default:
+				go func() {
+					for _, i := range em.Inspectors {
+						i.Inspect(e, errChan)
+					}
+				}()
 
-		default:
-			for e := range em.EntityChan {
-				for _, i := range em.Inspectors {
-					i.Inspect(e, errChan)
-				}
 				b, err := json.Marshal(e)
 				if err != nil {
 					errChan <- err

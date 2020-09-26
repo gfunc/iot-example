@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"iot_practise/model/entities"
 	"testing"
+	"time"
 )
 
 func TestEvent_ParseBinary(t *testing.T) {
@@ -67,4 +68,10 @@ func printOut(i interface{}) {
 		panic(err)
 	}
 	fmt.Println(string(b))
+}
+
+func TestTimer(t *testing.T) {
+	timer := time.NewTimer(2 * time.Second)
+	tt := <-timer.C
+	fmt.Printf("time is up %s", tt.Format("2006-01-02T15:04:05"))
 }

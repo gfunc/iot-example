@@ -14,14 +14,13 @@ import (
 
 const threadSize = 3
 
-var monitors []ip.EventMonitor
+var monitors []*ip.EventMonitor
 
 func init() {
-	monitors = []ip.EventMonitor{
+	monitors = []*ip.EventMonitor{
 		{
-			Name:       "tmp",
-			Entity:     &entities.TemperatureEvent{},
-			EntityChan: make(chan ip.EventEntity, threadSize),
+			Name:   "tmp",
+			Entity: &entities.TemperatureEvent{},
 			Inspectors: []ip.EventInspector{
 				new(inspectors.TemperatureInspector),
 				new(inspectors.TemperatureAvgInspector),
@@ -29,9 +28,8 @@ func init() {
 		},
 
 		{
-			Name:       "qlt",
-			Entity:     &entities.QualityEvent{},
-			EntityChan: make(chan ip.EventEntity, threadSize),
+			Name:   "qlt",
+			Entity: &entities.QualityEvent{},
 			Inspectors: []ip.EventInspector{
 				new(inspectors.QualityInspector),
 			},
@@ -54,21 +52,31 @@ func main() {
 	}()
 
 	for _, m := range monitors {
-		http.HandleFunc("/"+m.Name, m.GetHandler())
+		m.CreateChan(threadSize)
 		wk := m.GetWorker(m.Name)
 		ctx, cancel := context.WithCancel(context.Background())
 		cancelFuncs = append(cancelFuncs, cancel)
-		for i := 0; i < threadSize; i++ {
-			go wk(ctx, errChan)
+		for k := 0; k < threadSize; k++ {
+			go wk(ctx, k, errChan)
 		}
+		// expire worker when time is up, to avoid too large file
+		go func(monitor *ip.EventMonitor, ctxt context.Context) {
+			for index := range monitor.WorkerCreate {
+				go monitor.GetWorker(monitor.Name)(ctxt, index, errChan)
+			}
+		}(m, ctx)
+
+		handler := m.GetHandler()
+		http.Handle("/"+m.Name, handler)
 	}
+	cn := ip.ConsoleNotifier{}
 	go func() {
 		for err := range errChan {
-			ea, ok := err.(*ip.EventAlert)
+			ea, ok := err.(ip.EventAlert)
 			if ok {
-				fmt.Println("WARNING: " + ea.Error())
+				cn.Notify(ea)
 			} else {
-				fmt.Println("ERROR: " + ea.Error())
+				fmt.Println("ERROR: " + err.Error())
 			}
 		}
 	}()
