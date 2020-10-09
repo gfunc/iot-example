@@ -2,8 +2,8 @@ package inspectors
 
 import (
 	"fmt"
-	ip "iot_practise"
-	"iot_practise/model/entities"
+	"iote"
+	"iote/model/entities"
 	"sync"
 )
 
@@ -17,7 +17,7 @@ type indexStat struct {
 	warn map[string]float64
 }
 
-func (qi *QualityInspector) Inspect(entity ip.EventEntity, errChan chan<- error) {
+func (qi *QualityInspector) Inspect(entity iote.EventEntity, errChan chan<- error) {
 	qi.Lock()
 	defer qi.Unlock()
 	if qi.cache == nil {
@@ -35,7 +35,7 @@ func (qi *QualityInspector) Inspect(entity ip.EventEntity, errChan chan<- error)
 			for k, v := range tp.Indexes {
 				if wk, ok := qe.warn[k]; ok {
 					if v >= wk*1.1 {
-						errChan <- ip.EventAlert{
+						errChan <- iote.EventAlert{
 							Event: entity,
 							Msg:   fmt.Sprintf("%s过高", k),
 						}

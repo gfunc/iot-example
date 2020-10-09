@@ -2,8 +2,8 @@ package inspectors
 
 import (
 	"fmt"
-	ip "iot_practise"
-	"iot_practise/model/entities"
+	"iote"
+	"iote/model/entities"
 	"sync"
 	"time"
 )
@@ -19,7 +19,7 @@ type tempAvg struct {
 	avgTemp float64
 }
 
-func (ti *TemperatureAvgInspector) Inspect(entity ip.EventEntity, errChan chan<- error) {
+func (ti *TemperatureAvgInspector) Inspect(entity iote.EventEntity, errChan chan<- error) {
 	ti.Lock()
 	defer ti.Unlock()
 	if ti.cache == nil {
@@ -37,7 +37,7 @@ func (ti *TemperatureAvgInspector) Inspect(entity ip.EventEntity, errChan chan<-
 		} else {
 			if tp.EventTime.Truncate(time.Hour * 24).After(tc.date) {
 				if tc.count > 0 {
-					errChan <- ip.EventAlert{
+					errChan <- iote.EventAlert{
 						Event: nil,
 						Msg:   fmt.Sprintf("设备 %s, %s,温度: %f", tp.DeviceID, tc.date.Format("2006-01-02"), tc.avgTemp),
 					}

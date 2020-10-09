@@ -1,4 +1,4 @@
-package iot_practise
+package iote
 
 import (
 	"context"

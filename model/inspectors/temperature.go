@@ -2,8 +2,8 @@ package inspectors
 
 import (
 	"fmt"
-	ip "iot_practise"
-	"iot_practise/model/entities"
+	"iote"
+	"iote/model/entities"
 	"sync"
 	"time"
 )
@@ -19,7 +19,7 @@ type tempStat struct {
 	min  entities.TemperatureEvent
 }
 
-func (ti *TemperatureInspector) Inspect(entity ip.EventEntity, errChan chan<- error) {
+func (ti *TemperatureInspector) Inspect(entity iote.EventEntity, errChan chan<- error) {
 	ti.Lock()
 	defer ti.Unlock()
 	if ti.cache == nil {
@@ -56,7 +56,7 @@ func (ti *TemperatureInspector) Inspect(entity ip.EventEntity, errChan chan<- er
 				}
 			}
 			if msg != "" {
-				errChan <- ip.EventAlert{
+				errChan <- iote.EventAlert{
 					Event: entity,
 					Msg:   msg,
 				}

@@ -1,4 +1,4 @@
-package iot_practise
+package iote
 
 import (
 	"encoding/json"
@@ -34,7 +34,7 @@ type EventNotifier interface {
 	Notify(EventAlert)
 }
 
-type ConsoleNotifier struct {}
+type ConsoleNotifier struct{}
 
 func (ConsoleNotifier) Notify(ea EventAlert) {
 	fmt.Println("WARNING: " + ea.Error())

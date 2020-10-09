@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	ip "iot_practise"
-	"iot_practise/model/entities"
-	"iot_practise/model/inspectors"
+	"iote"
+	"iote/model/entities"
+	"iote/model/inspectors"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,14 +14,14 @@ import (
 
 const threadSize = 3
 
-var monitors []*ip.EventMonitor
+var monitors []*iote.EventMonitor
 
 func init() {
-	monitors = []*ip.EventMonitor{
+	monitors = []*iote.EventMonitor{
 		{
 			Name:   "tmp",
 			Entity: &entities.TemperatureEvent{},
-			Inspectors: []ip.EventInspector{
+			Inspectors: []iote.EventInspector{
 				new(inspectors.TemperatureInspector),
 				new(inspectors.TemperatureAvgInspector),
 			},
@@ -30,7 +30,7 @@ func init() {
 		{
 			Name:   "qlt",
 			Entity: &entities.QualityEvent{},
-			Inspectors: []ip.EventInspector{
+			Inspectors: []iote.EventInspector{
 				new(inspectors.QualityInspector),
 			},
 		},
@@ -60,7 +60,7 @@ func main() {
 			go wk(ctx, k, errChan)
 		}
 		// expire worker when time is up, to avoid too large file
-		go func(monitor *ip.EventMonitor, ctxt context.Context) {
+		go func(monitor *iote.EventMonitor, ctxt context.Context) {
 			for index := range monitor.WorkerCreate {
 				go monitor.GetWorker(monitor.Name)(ctxt, index, errChan)
 			}
@@ -69,10 +69,10 @@ func main() {
 		handler := m.GetHandler()
 		http.Handle("/"+m.Name, handler)
 	}
-	cn := ip.ConsoleNotifier{}
+	cn := iote.ConsoleNotifier{}
 	go func() {
 		for err := range errChan {
-			ea, ok := err.(ip.EventAlert)
+			ea, ok := err.(iote.EventAlert)
 			if ok {
 				cn.Notify(ea)
 			} else {

@@ -1,3 +1,3 @@
-module iot_practise
+module iote
 
 go 1.15
