@@ -21,7 +21,8 @@ func TestTemperature(t *testing.T) {
 		go func(group *sync.WaitGroup, index int) {
 			defer group.Done()
 			for i := 0; i < 1000; i++ {
-				data := fmt.Sprintf("T%d,%s,%f;", index, time.Now().AddDate(0, 0, int(i/100)).Format(timeFormat), rand.Float64()+float64(rand.Intn(100)))
+				datediff := int(i/100)
+				data := fmt.Sprintf("T%d,%s,%f;", index, time.Now().AddDate(0, 0, datediff).Format(timeFormat), rand.Float64()+float64(rand.Intn(100)))
 				post("tmp", data)
 			}
 		}(wg, k)

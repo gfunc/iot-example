@@ -84,11 +84,11 @@ func (em *EventMonitor) GetWorker(prefix string) Worker {
 				em.entityChan <- e
 				return
 			default:
-				go func() {
+				go func(entity EventEntity) {
 					for _, i := range em.Inspectors {
-						i.Inspect(e, errChan)
+						i.Inspect(entity, errChan)
 					}
-				}()
+				}(e)
 
 				b, err := json.Marshal(e)
 				if err != nil {
