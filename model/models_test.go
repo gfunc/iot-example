@@ -3,7 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"iot_practise/model/entities"
+	"iote/model/entities"
 	"testing"
 	"time"
 )
