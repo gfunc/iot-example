@@ -32,6 +32,7 @@ func init() {
 			Entity: &entities.QualityEvent{},
 			Inspectors: []iote.EventInspector{
 				new(inspectors.QualityInspector),
+				new(inspectors.QualityAvgInspector),
 			},
 		},
 	}
@@ -68,6 +69,12 @@ func main() {
 
 		handler := m.GetHandler()
 		http.Handle("/"+m.Name, handler)
+		for _, i := range m.Inspectors {
+			svc := i.ReportService()
+			if svc != nil {
+				http.Handle("/"+m.Name+"/"+svc.URI, svc.Handler)
+			}
+		}
 	}
 	cn := iote.ConsoleNotifier{}
 	go func() {

@@ -17,6 +17,10 @@ type indexStat struct {
 	warn map[string]float64
 }
 
+func (qi *QualityInspector) ReportService() *iote.EventInspectorService {
+	return nil
+}
+
 func (qi *QualityInspector) Inspect(entity iote.EventEntity, errChan chan<- error) {
 	qi.Lock()
 	defer qi.Unlock()
@@ -36,8 +40,12 @@ func (qi *QualityInspector) Inspect(entity iote.EventEntity, errChan chan<- erro
 				if wk, ok := qe.warn[k]; ok {
 					if v >= wk*1.1 {
 						errChan <- iote.EventAlert{
-							Event: entity,
-							Msg:   fmt.Sprintf("%s过高", k),
+							Event: nil,
+							Msg:   fmt.Sprintf("%s:%f第一次过高", k, wk),
+						}
+						errChan <- iote.EventAlert{
+							Event: nil,
+							Msg:   fmt.Sprintf("%s:%f第二次过高", k, v),
 						}
 					} else {
 						delete(qe.warn, k)

@@ -2,8 +2,15 @@ package entities
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 )
+
+var tempRegex regexp.Regexp
+
+func init() {
+	tempRegex = *regexp.MustCompile(`\d\d,([0-9]*[.]?[0-9]+);$`)
+}
 
 type TemperatureEvent struct {
 	Event
@@ -15,7 +22,7 @@ func (e *TemperatureEvent) ParseBinary(b []byte) (err error) {
 		return err
 	}
 	sub := tempRegex.FindStringSubmatch(string(b))
-	if len(sub)<2{
+	if len(sub) < 2 {
 		return fmt.Errorf("wrong format")
 	}
 	tempStr := sub[1]

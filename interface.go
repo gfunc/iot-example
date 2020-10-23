@@ -3,6 +3,7 @@ package iote
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 )
 
 type EventEntity interface {
@@ -28,6 +29,12 @@ func (ea EventAlert) Error() string {
 
 type EventInspector interface {
 	Inspect(entity EventEntity, errChan chan<- error)
+	ReportService() *EventInspectorService
+}
+
+type EventInspectorService struct {
+	Handler http.HandlerFunc
+	URI     string
 }
 
 type EventNotifier interface {

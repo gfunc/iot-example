@@ -19,6 +19,10 @@ type tempStat struct {
 	min  entities.TemperatureEvent
 }
 
+func (ti *TemperatureInspector) ReportService() *iote.EventInspectorService {
+	return nil
+}
+
 func (ti *TemperatureInspector) Inspect(entity iote.EventEntity, errChan chan<- error) {
 	ti.Lock()
 	defer ti.Unlock()

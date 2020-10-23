@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"iote"
 	"iote/model/entities"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -19,6 +20,19 @@ type tempAvg struct {
 	avgTemp float64
 }
 
+func (ti *TemperatureAvgInspector) ReportService() *iote.EventInspectorService {
+	return &iote.EventInspectorService{
+		Handler: func(w http.ResponseWriter, req *http.Request) {
+			respStr := ""
+			for t, a := range ti.cache {
+
+				respStr += fmt.Sprintf("%s 温度: %s, %f\n", t, a.date.Format("2006-01-02"), a.avgTemp)
+			}
+			fmt.Fprintf(w, respStr)
+		},
+		URI: "avg",
+	}
+}
 func (ti *TemperatureAvgInspector) Inspect(entity iote.EventEntity, errChan chan<- error) {
 	ti.Lock()
 	defer ti.Unlock()
@@ -36,12 +50,12 @@ func (ti *TemperatureAvgInspector) Inspect(entity iote.EventEntity, errChan chan
 			}
 		} else {
 			if tp.EventTime.Truncate(time.Hour * 24).After(tc.date) {
-				if tc.count > 0 {
-					errChan <- iote.EventAlert{
-						Event: nil,
-						Msg:   fmt.Sprintf("设备 %s, %s,温度: %f", tp.DeviceID, tc.date.Format("2006-01-02"), tc.avgTemp),
-					}
-				}
+				//if tc.count > 0 {
+				//	errChan <- iote.EventAlert{
+				//		Event: nil,
+				//		Msg:   fmt.Sprintf("设备 %s, %s,温度: %f", tp.DeviceID, tc.date.Format("2006-01-02"), tc.avgTemp),
+				//	}
+				//}
 				tc.date = tp.EventTime
 				tc.count = 1
 				tc.avgTemp = tp.Temperature

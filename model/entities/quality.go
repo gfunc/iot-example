@@ -1,9 +1,16 @@
 package entities
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 )
+
+var qualityRegex regexp.Regexp
+
+func init() {
+	qualityRegex = *regexp.MustCompile(`[a-zA-Z]+:[0-9]*[.]?[0-9]+`)
+}
 
 type QualityEvent struct {
 	Event

@@ -8,12 +8,10 @@ import (
 
 const timeFormat = `2006-01-02 15:04:05`
 
-var eventRegex, tempRegex, qualityRegex regexp.Regexp
+var eventRegex regexp.Regexp
 
 func init() {
 	eventRegex = *regexp.MustCompile(`^(.+),(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d),`)
-	tempRegex = *regexp.MustCompile(`\d\d,([0-9]*[.]?[0-9]+);$`)
-	qualityRegex = *regexp.MustCompile(`[a-zA-Z]+:[0-9]*[.]?[0-9]+`)
 }
 
 type Event struct {

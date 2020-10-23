@@ -21,7 +21,7 @@ func TestTemperature(t *testing.T) {
 		go func(group *sync.WaitGroup, index int) {
 			defer group.Done()
 			for i := 0; i < 1000; i++ {
-				datediff := int(i/100)
+				datediff := int(i / 100)
 				data := fmt.Sprintf("T%d,%s,%f;", index, time.Now().AddDate(0, 0, datediff).Format(timeFormat), rand.Float64()+float64(rand.Intn(100)))
 				post("tmp", data)
 			}
@@ -47,7 +47,25 @@ func TestQuality(t *testing.T) {
 		}(wg, k)
 	}
 	wg.Wait()
+}
 
+func TestExample(t *testing.T) {
+	temp := []string{"T1,2020-01-30 19:00:01,22;",
+		"T1,2020-01-30 19:00:00,25;",
+		"T1,2020-01-30 19:00:02,28;"}
+
+	qly := []string{"Q1,2020-01-30 19:30:10,AB:37.8,AE:100,CE:0.01;",
+		"Q1,2020-01-30 19:30:20,AB:39.8,AE:100,CE:0.01;",
+		"Q1,2020-01-30 19:30:25,AB:39.9,AE:100,CE:0.01;",
+		"Q1,2020-01-30 19:30:32,AB:48.9,AE:101,CE:0.011;",
+		"Q1,2020-01-30 19:30:40,AB:58.9,AE:103,CE:0.012;",
+	}
+	for _, t := range temp {
+		post("tmp", t)
+	}
+	for _, t := range qly {
+		post("qlt", t)
+	}
 }
 
 func post(uri, data string) {
